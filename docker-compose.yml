@@ -1,0 +1,38 @@
+
+# Use postgres/example user/password credentials
+version: '3.1'
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - type: bind
+        source: ./postgres/data
+        target: /docker-entrypoint-initdb.d
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dpsa
+    ports:
+      - 5432:5432
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  aggregator1:
+    image: mxmurw/janus_server_aggregator:latest
+    volumes:
+      - type: bind
+        source: ./janus/data
+        target: /data
+    ports:
+      - 9991:9991
+
+# volumes:
+#   docker-entrypoint-initdb.d:
+
+
