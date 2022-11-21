@@ -3,7 +3,7 @@
 version: '3.1'
 
 services:
-  db:
+  db1:
     image: postgres
     volumes:
       - type: bind
@@ -15,7 +15,21 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: dpsa
     ports:
-      - 5432:5432
+      - 9981:5432
+
+  db2:
+    image: postgres
+    volumes:
+      - type: bind
+        source: ./postgres/data
+        target: /docker-entrypoint-initdb.d
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dpsa
+    ports:
+      - 9982:5432
 
   adminer:
     image: adminer
@@ -27,12 +41,19 @@ services:
     image: mxmurw/janus_server_aggregator:latest
     volumes:
       - type: bind
-        source: ./janus/data
+        source: ./janus_server/data1
         target: /data
     ports:
       - 9991:9991
 
-# volumes:
-#   docker-entrypoint-initdb.d:
+  aggregator2:
+    image: mxmurw/janus_server_aggregator:latest
+    volumes:
+      - type: bind
+        source: ./janus_server/data2
+        target: /data
+    ports:
+      - 9992:9992
+
 
 

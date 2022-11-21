@@ -1,5 +1,0 @@
-
-listen_address: 0.0.0.0:9991
-database:
-  url: postgres://admin:password@localhost:5432/dpsa
-
