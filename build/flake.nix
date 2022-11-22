@@ -34,7 +34,7 @@
         };
 
         # building the container
-        dockerImage = pkgs.dockerTools.buildImage {
+        dockerImage_aggregator = pkgs.dockerTools.buildLayeredImage {
           name = "mxmurw/janus_server_aggregator";
           config = {
             Cmd = [ "${myRustBuild}/bin/aggregator" "--config-file" "/data/aggregator-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
@@ -43,12 +43,22 @@
           };
         };
 
+        dockerImage_collectJD = pkgs.dockerTools.buildLayeredImage {
+          name = "mxmurw/janus_server_collectJD";
+          config = {
+            Cmd = [ "${myRustBuild}/bin/collect_job_driver" "--config-file" "/data/aggregator-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
+            WorkingDir = "/data";
+            Volumes = { "/data" = {}; };
+          };
+        };
+
       in {
         packages = {
           rustPackage = myRustBuild;
-          docker = dockerImage;
+          image_aggregator = dockerImage_aggregator;
+          image_collectJD = dockerImage_collectJD;
         };
-        defaultPackage = dockerImage;
+        defaultPackage = dockerImage_aggregator;
 
         devShell = pkgs.mkShell {
           buildInputs =
