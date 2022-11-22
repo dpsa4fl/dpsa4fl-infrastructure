@@ -1,4 +1,0 @@
-
-database:
-  url: postgres://admin:password@localhost:5432/dpsa
-
