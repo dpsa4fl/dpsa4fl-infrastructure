@@ -1,0 +1,7 @@
+[submodule "build/janus"]
+	path = build/janus
+	url = git@github.com:dpsa-project/janus.git
+	branch = fixedvec
+[submodule "build/dpsa4fl-janus-tasks"]
+	path = build/dpsa4fl-janus-tasks
+	url = git@github.com:dpsa-project/dpsa4fl-janus-tasks.git
