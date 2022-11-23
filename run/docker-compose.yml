@@ -37,6 +37,8 @@ services:
     ports:
       - 8080:8080
 
+  #################################################################
+  # aggregator server 1 (leader)
   aggregator1:
     image: mxmurw/janus_server_aggregator:latest
     volumes:
@@ -46,6 +48,17 @@ services:
     ports:
       - 9991:9991
 
+  dpsa4fl-janus-tasks1:
+    image: mxmurw/janus_server_dpsa4fl-janus-tasks:latest
+    # volumes:
+    #   - type: bind
+    #     source: ./janus_server/data1
+    #     target: /data
+    # ports:
+    #   - 9991:9991
+
+  #################################################################
+  # aggregator server 2
   aggregator2:
     image: mxmurw/janus_server_aggregator:latest
     volumes:

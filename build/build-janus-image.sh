@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e; set -o pipefail;
 
+echo 'Building images...'
+
 # build aggregator
 nix build '.?submodules=1#image_aggregator'
 image=$((docker load < result) | sed -n '$s/^Loaded image: //p')
