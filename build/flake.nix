@@ -16,7 +16,7 @@
         };
 
         # janus_server
-        myRustBuild = rustPlatform.buildRustPackage {
+        rustbuild_janus = rustPlatform.buildRustPackage {
           pname =
             "janus_aggregator"; # make this what ever your cargo.toml package.name is
           version = "0.1.0";
@@ -33,20 +33,53 @@
           doCheck = false;
         };
 
+        # # dpsa4fl-janus-tasks
+        # rustbuild_dpsa4fl-janus-tasks = rustPlatform.buildRustPackage {
+        #   pname =
+        #     "dpsa4fl-janus-tasks"; # make this what ever your cargo.toml package.name is
+        #   version = "0.1.0";
+        #   src = ./dpsa4fl-janus-tasks; # the folder with the cargo.toml
+        #   cargoLock.lockFile = ./dpsa4fl-janus-tasks/Cargo.lock;
+        #   cargoLock.outputHashes = {
+        #     "janus_aggregator-0.2.0" = "sha256-+mj6QwjfpAR92+0UoLJnnZGhKS4W66gELBNEHs86P/M=";
+        #   };
+        #   cargoBuildFlags = ""; #"-p janus_aggregator";
+        #   nativeBuildInputs = [ pkgs.pkg-config ];
+        #   buildInputs = [
+        #     pkgs.openssl
+        #   ];
+        #   doCheck = false;
+        # };
+
+        ###########################################################
         # building the container
+        #
+
+        # aggregator
         dockerImage_aggregator = pkgs.dockerTools.buildLayeredImage {
           name = "mxmurw/janus_server_aggregator";
           config = {
-            Cmd = [ "${myRustBuild}/bin/aggregator" "--config-file" "/data/aggregator-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
+            Cmd = [ "${rustbuild_janus}/bin/aggregator" "--config-file" "/data/aggregator-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
             WorkingDir = "/data";
             Volumes = { "/data" = {}; };
           };
         };
 
-        dockerImage_collectJD = pkgs.dockerTools.buildLayeredImage {
-          name = "mxmurw/janus_server_collectJD";
+        # collect_jd
+        dockerImage_collect_jd = pkgs.dockerTools.buildLayeredImage {
+          name = "mxmurw/janus_server_collect_jd";
           config = {
-            Cmd = [ "${myRustBuild}/bin/collect_job_driver" "--config-file" "/data/aggregator-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
+            Cmd = [ "${rustbuild_janus}/bin/collect_job_driver" "--config-file" "/data/aggregator-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
+            WorkingDir = "/data";
+            Volumes = { "/data" = {}; };
+          };
+        };
+
+        # dpsa4fl-janus-tasks
+        dockerImage_dpsa4fl-janus-tasks = pkgs.dockerTools.buildLayeredImage {
+          name = "mxmurw/janus_server_collect_jd";
+          config = {
+            Cmd = [ "${rustbuild_janus}/bin/dpsa4fl-janus-tasks" "--config-file" "/data/aggregator-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
             WorkingDir = "/data";
             Volumes = { "/data" = {}; };
           };
@@ -54,9 +87,10 @@
 
       in {
         packages = {
-          rustPackage = myRustBuild;
+          rustPackage = rustbuild_janus;
           image_aggregator = dockerImage_aggregator;
-          image_collectJD = dockerImage_collectJD;
+          image_collect_jd = dockerImage_collect_jd;
+          image_dpsa4fl-janus-tasks = dockerImage_dpsa4fl-janus-tasks;
         };
         defaultPackage = dockerImage_aggregator;
 
