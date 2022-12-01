@@ -68,5 +68,14 @@ services:
     ports:
       - 9992:9992
 
+  dpsa4fl-janus-tasks2:
+    image: mxmurw/janus_server_dpsa4fl-janus-tasks:latest
+    volumes:
+      - type: bind
+        source: ./janus_server/data2
+        target: /data
+    ports:
+      - 9982:9992
+
 
 
