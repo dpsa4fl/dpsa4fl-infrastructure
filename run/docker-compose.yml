@@ -15,7 +15,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: dpsa
     ports:
-      - 9981:5432
+      - 9901:5432
 
   db2:
     image: postgres
@@ -29,7 +29,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: dpsa
     ports:
-      - 9982:5432
+      - 9902:5432
 
   adminer:
     image: adminer
@@ -50,12 +50,12 @@ services:
 
   dpsa4fl-janus-tasks1:
     image: mxmurw/janus_server_dpsa4fl-janus-tasks:latest
-    # volumes:
-    #   - type: bind
-    #     source: ./janus_server/data1
-    #     target: /data
-    # ports:
-    #   - 9991:9991
+    volumes:
+      - type: bind
+        source: ./janus_server/data1
+        target: /data
+    ports:
+      - 9981:9991
 
   #################################################################
   # aggregator server 2
