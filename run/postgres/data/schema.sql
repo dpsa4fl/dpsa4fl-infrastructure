@@ -1,7 +1,6 @@
 -- Load pgcrypto for gen_random_bytes.
 CREATE EXTENSION pgcrypto;
--- Load an extension to allow indexing over both BIGINT and TSRANGE in a
--- multicolumn GiST index.
+-- Load an extension to allow indexing over both BIGINT and TSRANGE in a multicolumn GiST index.
 CREATE EXTENSION btree_gist;
 
 -- Identifies which aggregator role is being played for this task.
@@ -10,16 +9,18 @@ CREATE TYPE AGGREGATOR_ROLE AS ENUM(
     'HELPER'
 );
 
--- Corresponds to a PPM task, containing static data associated with the task.
+-- Corresponds to a DAP task, containing static data associated with the task.
 CREATE TABLE tasks(
     id                     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,  -- artificial ID, internal-only
-    task_id                BYTEA UNIQUE NOT NULL,     -- 32-byte TaskID as defined by the PPM specification
+    task_id                BYTEA UNIQUE NOT NULL,     -- 32-byte TaskID as defined by the DAP specification
     aggregator_role        AGGREGATOR_ROLE NOT NULL,  -- the role of this aggregator for this task
     aggregator_endpoints   TEXT[] NOT NULL,           -- aggregator HTTPS endpoints, leader first
+    query_type             JSON NOT NULL,             -- the query type in use for this task, along with its parameters
     vdaf                   JSON NOT NULL,             -- the VDAF instance in use for this task, along with its parameters
-    max_batch_lifetime     BIGINT NOT NULL,           -- the maximum number of times a given batch may be collected
+    max_batch_query_count  BIGINT NOT NULL,           -- the maximum number of times a given batch may be collected
+    task_expiration        TIMESTAMP NOT NULL,        -- the time after which client reports are no longer accepted
     min_batch_size         BIGINT NOT NULL,           -- the minimum number of reports in a batch to allow it to be collected
-    min_batch_duration     BIGINT NOT NULL,           -- the minimum duration in seconds of a single batch interval
+    time_precision         BIGINT NOT NULL,           -- the duration to which clients are expected to round their report timestamps, in seconds
     tolerable_clock_skew   BIGINT NOT NULL,           -- the maximum acceptable clock skew to allow between client and aggregator, in seconds
     collector_hpke_config  BYTEA NOT NULL             -- the HPKE config of the collector (encoded HpkeConfig message)
 );
@@ -71,17 +72,18 @@ CREATE TABLE task_vdaf_verify_keys(
 
 -- Individual reports received from clients.
 CREATE TABLE client_reports(
-    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- artificial ID, internal-only
-    task_id       BIGINT NOT NULL,     -- task ID the report is associated with
-    nonce_time    TIMESTAMP NOT NULL,  -- timestamp from nonce
-    nonce_rand    BYTEA NOT NULL,      -- random value from nonce
-    extensions    BYTEA,               -- encoded sequence of Extension messages (populated for leader only)
-    input_shares  BYTEA,               -- encoded sequence of HpkeCiphertext messages (populated for leader only)
+    id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- artificial ID, internal-only
+    task_id           BIGINT NOT NULL,     -- task ID the report is associated with
+    report_id         BYTEA NOT NULL,      -- 16-byte ReportID as defined by the DAP specification
+    client_timestamp  TIMESTAMP NOT NULL,  -- report timestamp, from client
+    extensions        BYTEA,               -- encoded sequence of Extension messages (populated for leader only)
+    public_share      BYTEA,               -- encoded public share (opaque VDAF message, populated for leader only)
+    input_shares      BYTEA,               -- encoded sequence of HpkeCiphertext messages (populated for leader only)
 
-    CONSTRAINT unique_task_id_and_nonce UNIQUE(task_id, nonce_time, nonce_rand),
+    CONSTRAINT unique_task_id_and_report_id UNIQUE(task_id, report_id),
     CONSTRAINT fk_task_id FOREIGN KEY(task_id) REFERENCES tasks(id)
 );
-CREATE INDEX client_reports_task_and_time_index ON client_reports(task_id, nonce_time);
+CREATE INDEX client_reports_task_and_timestamp_index ON client_reports(task_id, client_timestamp);
 
 -- Specifies the possible state of an aggregation job.
 CREATE TYPE AGGREGATION_JOB_STATE AS ENUM(
@@ -94,7 +96,8 @@ CREATE TYPE AGGREGATION_JOB_STATE AS ENUM(
 CREATE TABLE aggregation_jobs(
     id                 BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- artificial ID, internal-only
     task_id            BIGINT NOT NULL,                 -- ID of related task
-    aggregation_job_id BYTEA NOT NULL,                  -- 32-byte AggregationJobID as defined by the PPM specification
+    aggregation_job_id BYTEA NOT NULL,                  -- 32-byte AggregationJobID as defined by the DAP specification
+    batch_identifier   BYTEA NOT NULL,                  -- encoded query-type-specific batch identifier (corresponds to identifier in PartialBatchSelector)
     aggregation_param  BYTEA NOT NULL,                  -- encoded aggregation parameter (opaque VDAF message)
     state              AGGREGATION_JOB_STATE NOT NULL,  -- current state of the aggregation job
 
@@ -128,7 +131,7 @@ CREATE TABLE report_aggregations(
     prep_state          BYTEA,                              -- the current preparation state (opaque VDAF message, only if in state WAITING)
     prep_msg            BYTEA,                              -- the next preparation message to be sent to the helper (opaque VDAF message, only if in state WAITING if this aggregator is the leader)
     out_share           BYTEA,                              -- the output share (opaque VDAF message, only if in state FINISHED)
-    error_code          BIGINT,                             -- error code corresponding to a PPM ReportShareError value; null if in a state other than FAILED
+    error_code          BIGINT,                             -- error code corresponding to a DAP ReportShareError value; null if in a state other than FAILED
 
     CONSTRAINT unique_ord UNIQUE(aggregation_job_id, ord),
     CONSTRAINT fk_aggregation_job_id FOREIGN KEY(aggregation_job_id) REFERENCES aggregation_jobs(id),
@@ -156,7 +159,8 @@ CREATE TABLE batch_unit_aggregations(
 CREATE TYPE COLLECT_JOB_STATE AS ENUM(
     'START',     -- the aggregator is waiting to run this collect job
     'FINISHED',  -- this collect job has run successfully and is ready for collection
-    'ABANDONED'  -- this collect job has been abandoned & will never be run again
+    'ABANDONED', -- this collect job has been abandoned & will never be run again
+    'DELETED'    -- this collect job has been deleted
 );
 
 -- The leader's view of collect requests from the Collector.
@@ -167,6 +171,7 @@ CREATE TABLE collect_jobs(
     batch_interval          TSRANGE NOT NULL,            -- the batch interval, as a range of timestamps
     aggregation_param       BYTEA NOT NULL,              -- the aggregation parameter (opaque VDAF message)
     state                   COLLECT_JOB_STATE NOT NULL,  -- the current state of this collect job
+    report_count            BIGINT,                      -- the number of reports included in this collect job (only if in state FINISHED)
     helper_aggregate_share  BYTEA,                       -- the helper's encrypted aggregate share (HpkeCiphertext, only if in state FINISHED)
     leader_aggregate_share  BYTEA,                       -- the leader's unencrypted aggregate share (opaque VDAF message, only if in state FINISHED)
 
