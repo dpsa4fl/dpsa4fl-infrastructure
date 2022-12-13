@@ -25,7 +25,7 @@
           cargoLock.outputHashes = {
             "daphne-0.1.2" = "sha256-nYuTR0QjvlyWAVoSy1UmaPXZHco4KODxcNCDq4Vqcfo=";
           };
-          cargoBuildFlags = "-p janus_aggregator";
+          cargoBuildFlags = "-p janus_aggregator --features jaeger";
           nativeBuildInputs = [ pkgs.pkg-config ];
           buildInputs = [
             pkgs.openssl
@@ -69,7 +69,27 @@
         dockerImage_collect_jd = pkgs.dockerTools.buildLayeredImage {
           name = "mxmurw/janus_server_collect_jd";
           config = {
-            Cmd = [ "${rustbuild_janus}/bin/collect_job_driver" "--config-file" "/data/aggregator-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
+            Cmd = [ "${rustbuild_janus}/bin/collect_job_driver" "--config-file" "/data/job-driver-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
+            WorkingDir = "/data";
+            Volumes = { "/data" = {}; };
+          };
+        };
+
+        # aggregation_jd
+        dockerImage_aggregation_jd = pkgs.dockerTools.buildLayeredImage {
+          name = "mxmurw/janus_server_aggregation_jd";
+          config = {
+            Cmd = [ "${rustbuild_janus}/bin/aggregation_job_driver" "--config-file" "/data/job-driver-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
+            WorkingDir = "/data";
+            Volumes = { "/data" = {}; };
+          };
+        };
+
+        # aggregation_jc
+        dockerImage_aggregation_jc = pkgs.dockerTools.buildLayeredImage {
+          name = "mxmurw/janus_server_aggregation_jc";
+          config = {
+            Cmd = [ "${rustbuild_janus}/bin/aggregation_job_creator" "--config-file" "/data/job-creator-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
             WorkingDir = "/data";
             Volumes = { "/data" = {}; };
           };
@@ -90,6 +110,8 @@
           rustPackage = rustbuild_janus;
           image_aggregator = dockerImage_aggregator;
           image_collect_jd = dockerImage_collect_jd;
+          image_aggregation_jd = dockerImage_aggregation_jd;
+          image_aggregation_jc = dockerImage_aggregation_jc;
           image_dpsa4fl-janus-tasks = dockerImage_dpsa4fl-janus-tasks;
         };
         defaultPackage = dockerImage_aggregator;

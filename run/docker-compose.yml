@@ -57,6 +57,27 @@ services:
     ports:
       - 9981:9991
 
+  janus_server_collect_jd1:
+    image: mxmurw/janus_server_collect_jd:latest
+    volumes:
+      - type: bind
+        source: ./janus_server/data1
+        target: /data
+
+  janus_server_aggregation_jd1:
+    image: mxmurw/janus_server_aggregation_jd:latest
+    volumes:
+      - type: bind
+        source: ./janus_server/data1
+        target: /data
+
+  janus_server_aggregation_jc1:
+    image: mxmurw/janus_server_aggregation_jc:latest
+    volumes:
+      - type: bind
+        source: ./janus_server/data1
+        target: /data
+
   #################################################################
   # aggregator server 2
   aggregator2:

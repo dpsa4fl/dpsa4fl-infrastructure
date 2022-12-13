@@ -2,3 +2,6 @@
 listen_address: 0.0.0.0:9992
 database:
   url: postgres://admin:password@db2:5432/dpsa
+
+logging_config:
+  open_telemetry_config: jaeger
