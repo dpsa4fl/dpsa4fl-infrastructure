@@ -41,12 +41,15 @@ services:
   # aggregator server 1 (leader)
   aggregator1:
     image: mxmurw/janus_server_aggregator:latest
+    environment:
+      - RUST_LOG=info
     volumes:
       - type: bind
         source: ./janus_server/data1
         target: /data
     ports:
       - 9991:9991
+      - 6669:6669
 
   dpsa4fl-janus-tasks1:
     image: mxmurw/janus_server_dpsa4fl-janus-tasks:latest
@@ -66,6 +69,8 @@ services:
 
   janus_server_aggregation_jd1:
     image: mxmurw/janus_server_aggregation_jd:latest
+    environment:
+      - RUST_LOG=info
     volumes:
       - type: bind
         source: ./janus_server/data1

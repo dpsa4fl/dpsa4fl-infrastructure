@@ -8,4 +8,6 @@ min_aggregation_job_size: 2
 max_aggregation_job_size: 100
 
 logging_config:
-  open_telemetry_config: jaeger
+  tokio_console_config:
+    enabled: true
+    listen_address: 127.0.0.1:6669

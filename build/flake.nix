@@ -24,8 +24,10 @@
           cargoLock.lockFile = ./janus/Cargo.lock;
           cargoLock.outputHashes = {
             "daphne-0.1.2" = "sha256-nYuTR0QjvlyWAVoSy1UmaPXZHco4KODxcNCDq4Vqcfo=";
+            "prio-0.10.0" = "sha256-XDia3MOwUpnvEIGn2RlGFt5tB3LjNXYDhpun4d3KL5c=";
           };
-          cargoBuildFlags = "-p janus_aggregator --features jaeger";
+          cargoBuildFlags = "-p janus_aggregator --features tokio-console";
+          RUSTFLAGS = "--cfg tokio_unstable";
           nativeBuildInputs = [ pkgs.pkg-config ];
           buildInputs = [
             pkgs.openssl
