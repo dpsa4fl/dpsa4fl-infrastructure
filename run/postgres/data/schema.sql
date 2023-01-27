@@ -15,7 +15,7 @@ CREATE TABLE tasks(
     task_id                BYTEA UNIQUE NOT NULL,     -- 32-byte TaskID as defined by the DAP specification
     aggregator_role        AGGREGATOR_ROLE NOT NULL,  -- the role of this aggregator for this task
     aggregator_endpoints   TEXT[] NOT NULL,           -- aggregator HTTPS endpoints, leader first
-    query_type             JSON NOT NULL,             -- the query type in use for this task, along with its parameters
+    query_type             JSONB NOT NULL,            -- the query type in use for this task, along with its parameters
     vdaf                   JSON NOT NULL,             -- the VDAF instance in use for this task, along with its parameters
     max_batch_query_count  BIGINT NOT NULL,           -- the maximum number of times a given batch may be collected
     task_expiration        TIMESTAMP NOT NULL,        -- the time after which client reports are no longer accepted
@@ -72,13 +72,14 @@ CREATE TABLE task_vdaf_verify_keys(
 
 -- Individual reports received from clients.
 CREATE TABLE client_reports(
-    id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- artificial ID, internal-only
-    task_id           BIGINT NOT NULL,     -- task ID the report is associated with
-    report_id         BYTEA NOT NULL,      -- 16-byte ReportID as defined by the DAP specification
-    client_timestamp  TIMESTAMP NOT NULL,  -- report timestamp, from client
-    extensions        BYTEA,               -- encoded sequence of Extension messages (populated for leader only)
-    public_share      BYTEA,               -- encoded public share (opaque VDAF message, populated for leader only)
-    input_shares      BYTEA,               -- encoded sequence of HpkeCiphertext messages (populated for leader only)
+    id                              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- artificial ID, internal-only
+    task_id                         BIGINT NOT NULL,     -- task ID the report is associated with
+    report_id                       BYTEA NOT NULL,      -- 16-byte ReportID as defined by the DAP specification
+    client_timestamp                TIMESTAMP NOT NULL,  -- report timestamp, from client
+    extensions                      BYTEA,               -- encoded sequence of Extension messages (populated for leader only)
+    public_share                    BYTEA,               -- encoded public share (opaque VDAF message, populated for leader only)
+    leader_input_share              BYTEA,               -- encoded, decrypted leader input share (populated for leader only)
+    helper_encrypted_input_share    BYTEA,               -- encdoed HpkeCiphertext message containing the helper's input share (populated for leader only)
 
     CONSTRAINT unique_task_id_and_report_id UNIQUE(task_id, report_id),
     CONSTRAINT fk_task_id FOREIGN KEY(task_id) REFERENCES tasks(id)
@@ -94,21 +95,24 @@ CREATE TYPE AGGREGATION_JOB_STATE AS ENUM(
 
 -- An aggregation job, representing the aggregation of a number of client reports.
 CREATE TABLE aggregation_jobs(
-    id                 BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- artificial ID, internal-only
-    task_id            BIGINT NOT NULL,                 -- ID of related task
-    aggregation_job_id BYTEA NOT NULL,                  -- 32-byte AggregationJobID as defined by the DAP specification
-    batch_identifier   BYTEA NOT NULL,                  -- encoded query-type-specific batch identifier (corresponds to identifier in PartialBatchSelector)
-    aggregation_param  BYTEA NOT NULL,                  -- encoded aggregation parameter (opaque VDAF message)
-    state              AGGREGATION_JOB_STATE NOT NULL,  -- current state of the aggregation job
+    id                       BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- artificial ID, internal-only
+    task_id                  BIGINT NOT NULL,                 -- ID of related task
+    aggregation_job_id       BYTEA NOT NULL,                  -- 32-byte AggregationJobID as defined by the DAP specification
+    batch_identifier         BYTEA,                           -- encoded query-type-specific batch identifier (corresponds to identifier in BatchSelector; present for leader tasks and fixed size tasks, NULL otherwise)
+    batch_interval           TSRANGE,                         -- batch interval, as a TSRANGE, populated only for leader time-interval tasks. (will match batch_identifier when present)
+    aggregation_param        BYTEA NOT NULL,                  -- encoded aggregation parameter (opaque VDAF message)
+    state                    AGGREGATION_JOB_STATE NOT NULL,  -- current state of the aggregation job
 
-    lease_expiry       TIMESTAMP NOT NULL DEFAULT TIMESTAMP '-infinity',  -- when lease on this aggregation job expires; -infinity implies no current lease
-    lease_token        BYTEA,                                             -- a value identifying the current leaseholder; NULL implies no current lease
-    lease_attempts     BIGINT NOT NULL DEFAULT 0,                         -- the number of lease acquiries since the last successful lease release
+    lease_expiry             TIMESTAMP NOT NULL DEFAULT TIMESTAMP '-infinity',  -- when lease on this aggregation job expires; -infinity implies no current lease
+    lease_token              BYTEA,                                             -- a value identifying the current leaseholder; NULL implies no current lease
+    lease_attempts           BIGINT NOT NULL DEFAULT 0,                         -- the number of lease acquiries since the last successful lease release
 
     CONSTRAINT unique_aggregation_job_id UNIQUE(aggregation_job_id),
     CONSTRAINT fk_task_id FOREIGN KEY(task_id) REFERENCES tasks(id)
 );
 CREATE INDEX aggregation_jobs_state_and_lease_expiry ON aggregation_jobs(state, lease_expiry) WHERE state = 'IN_PROGRESS';
+CREATE INDEX aggregation_jobs_task_and_batch_id ON aggregation_jobs(task_id, batch_identifier);
+CREATE INDEX aggregation_jobs_task_and_batch_interval ON aggregation_jobs USING gist (task_id, batch_interval) WHERE batch_interval IS NOT NULL;
 
 -- Specifies the possible state of aggregating a single report.
 CREATE TYPE REPORT_AGGREGATION_STATE AS ENUM(
@@ -131,7 +135,7 @@ CREATE TABLE report_aggregations(
     prep_state          BYTEA,                              -- the current preparation state (opaque VDAF message, only if in state WAITING)
     prep_msg            BYTEA,                              -- the next preparation message to be sent to the helper (opaque VDAF message, only if in state WAITING if this aggregator is the leader)
     out_share           BYTEA,                              -- the output share (opaque VDAF message, only if in state FINISHED)
-    error_code          BIGINT,                             -- error code corresponding to a DAP ReportShareError value; null if in a state other than FAILED
+    error_code          SMALLINT,                           -- error code corresponding to a DAP ReportShareError value; null if in a state other than FAILED
 
     CONSTRAINT unique_ord UNIQUE(aggregation_job_id, ord),
     CONSTRAINT fk_aggregation_job_id FOREIGN KEY(aggregation_job_id) REFERENCES aggregation_jobs(id),
@@ -140,18 +144,18 @@ CREATE TABLE report_aggregations(
 CREATE INDEX report_aggregations_aggregation_job_id_index ON report_aggregations(aggregation_job_id);
 CREATE INDEX report_aggregations_client_report_id_index ON report_aggregations(client_report_id);
 
--- Information on aggregation for a single batch unit. This information may be incremental if the
--- VDAF supports incremental aggregation.
-CREATE TABLE batch_unit_aggregations(
+-- Information on aggregation for a single batch. This information may be incremental if the VDAF
+-- supports incremental aggregation.
+CREATE TABLE batch_aggregations(
     id                    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,  -- artificial ID, internal-only
     task_id               BIGINT NOT NULL,     -- the task ID
-    unit_interval_start   TIMESTAMP NOT NULL,  -- the start of the batch unit
+    batch_identifier      BYTEA NOT NULL,      -- encoded query-type-specific batch identifier (corresponds to identifier in BatchSelector)
     aggregation_param     BYTEA NOT NULL,      -- the aggregation parameter (opaque VDAF message)
     aggregate_share       BYTEA NOT NULL,      -- the (possibly-incremental) aggregate share
     report_count          BIGINT NOT NULL,     -- the (possibly-incremental) client report count
     checksum              BYTEA NOT NULL,      -- the (possibly-incremental) checksum
 
-    CONSTRAINT unique_task_id_interval_aggregation_param UNIQUE(task_id, unit_interval_start, aggregation_param),
+    CONSTRAINT unique_task_id_interval_aggregation_param UNIQUE(task_id, batch_identifier, aggregation_param),
     CONSTRAINT fk_task_id FOREIGN KEY(task_id) REFERENCES tasks(id)
 );
 
@@ -168,7 +172,8 @@ CREATE TABLE collect_jobs(
     id                      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,  -- artificial ID, internal-only
     collect_job_id          UUID NOT NULL,               -- UUID used by collector to refer to this job
     task_id                 BIGINT NOT NULL,             -- the task ID being collected
-    batch_interval          TSRANGE NOT NULL,            -- the batch interval, as a range of timestamps
+    batch_identifier        BYTEA NOT NULL,              -- encoded query-type-specific batch identifier (corresponds to identifier in BatchSelector)
+    batch_interval          TSRANGE,                     -- batch interval, as a TSRANGE, populated only for time-interval tasks. (will always match batch_identifier)
     aggregation_param       BYTEA NOT NULL,              -- the aggregation parameter (opaque VDAF message)
     state                   COLLECT_JOB_STATE NOT NULL,  -- the current state of this collect job
     report_count            BIGINT,                      -- the number of reports included in this collect job (only if in state FINISHED)
@@ -179,7 +184,7 @@ CREATE TABLE collect_jobs(
     lease_token             BYTEA,                                             -- a value identifying the current leaseholder; NULL implies no current lease
     lease_attempts          BIGINT NOT NULL DEFAULT 0,                         -- the number of lease acquiries since the last successful lease release
 
-    CONSTRAINT unique_collect_job_task_id_interval_aggregation_param UNIQUE(task_id, batch_interval, aggregation_param),
+    CONSTRAINT unique_collect_job_task_id_interval_aggregation_param UNIQUE(task_id, batch_identifier, aggregation_param),
     CONSTRAINT fk_task_id FOREIGN KEY(task_id) REFERENCES tasks(id)
 );
 -- TODO(#224): verify that this index is optimal for purposes of acquiring collect jobs.
@@ -190,13 +195,25 @@ CREATE INDEX collect_jobs_interval_containment_index ON collect_jobs USING gist 
 CREATE TABLE aggregate_share_jobs(
     id                      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- artificial ID, internal-only
     task_id                 BIGINT NOT NULL,    -- the task ID being collected
-    batch_interval          TSRANGE NOT NULL,   -- the batch interval, as a range of timestamps
+    batch_identifier        BYTEA NOT NULL,     -- encoded query-type-specific batch identifier (corresponds to identifier in BatchSelector)
+    batch_interval          TSRANGE,            -- batch interval, as a TSRANGE, populated only for time-interval tasks. (will always match batch_identifier)
     aggregation_param       BYTEA NOT NULL,     -- the aggregation parameter (opaque VDAF message)
     helper_aggregate_share  BYTEA NOT NULL,     -- the helper's unencrypted aggregate share
     report_count            BIGINT NOT NULL,    -- the count of reports included helper_aggregate_share
     checksum                BYTEA NOT NULL,     -- the checksum over the reports included in helper_aggregate_share
 
-    CONSTRAINT unique_aggregate_share_job_task_id_interval_aggregation_param UNIQUE(task_id, batch_interval, aggregation_param),
+    CONSTRAINT unique_aggregate_share_job_task_id_interval_aggregation_param UNIQUE(task_id, batch_identifier, aggregation_param),
     CONSTRAINT fk_task_id FOREIGN KEY(task_id) REFERENCES tasks(id)
 );
 CREATE INDEX aggregate_share_jobs_interval_containment_index ON aggregate_share_jobs USING gist (task_id, batch_interval);
+
+-- The leader's view of outstanding batches, which are batches which have not yet started
+-- collection. Used for fixed-size tasks only.
+CREATE TABLE outstanding_batches(
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- artificial ID, internal-only
+    task_id BIGINT NOT NULL, -- the task ID containing the batch
+    batch_id BYTEA NOT NULL, -- 32-byte BatchID as defined by the DAP specification.
+
+    CONSTRAINT unique_task_id_batch_id UNIQUE(task_id, batch_id),
+    CONSTRAINT fk_task_id FOREIGN KEY(task_id) REFERENCES tasks(id)
+);
