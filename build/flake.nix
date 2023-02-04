@@ -24,7 +24,7 @@
           cargoLock.lockFile = ./janus/Cargo.lock;
           cargoLock.outputHashes = {
             # "daphne-0.1.2" = "sha256-nYuTR0QjvlyWAVoSy1UmaPXZHco4KODxcNCDq4Vqcfo=";
-            "prio-0.10.0" = "sha256-35rguMgtB64bDGKaDTiM8wYW4uK/TATAjLVQZOH8m/0=";
+            "prio-0.10.0" = "sha256-8+qFONGzjdWWv1CQ+jczBPpoTXVWXUsgrCzYcoGlAoQ=";
           };
           cargoBuildFlags = "-p janus_aggregator --features tokio-console,fpvec_bounded_l2";
           RUSTFLAGS = "--cfg tokio_unstable";
