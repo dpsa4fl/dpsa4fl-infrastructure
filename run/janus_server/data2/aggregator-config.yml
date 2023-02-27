@@ -1,5 +1,7 @@
 
 listen_address: 0.0.0.0:9992
+max_upload_batch_size: 50
+max_upload_batch_write_delay_ms: 500
 database:
   url: postgres://admin:password@db2:5432/dpsa
 

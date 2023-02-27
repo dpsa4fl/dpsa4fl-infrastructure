@@ -24,7 +24,7 @@
           cargoLock.lockFile = ./janus/Cargo.lock;
           cargoLock.outputHashes = {
             # "daphne-0.1.2" = "sha256-nYuTR0QjvlyWAVoSy1UmaPXZHco4KODxcNCDq4Vqcfo=";
-            "prio-0.10.0" = "sha256-z5EnTqLg8vL2Rn5UGCEtTvpkvcIvsMRvy6BeFIhVN0Y=";
+            "prio-0.10.0" = "sha256-6c+CZ/eHsWT8xJjfFTxW87wuffYo5FeEq17jvTZSZow=";
           };
           cargoBuildFlags = "-p janus_aggregator --features tokio-console,fpvec_bounded_l2";
           RUSTFLAGS = "--cfg tokio_unstable";
@@ -71,7 +71,7 @@
         dockerImage_collect_jd = pkgs.dockerTools.buildLayeredImage {
           name = "mxmurw/janus_server_collect_jd";
           config = {
-            Cmd = [ "${rustbuild_janus}/bin/collect_job_driver" "--config-file" "/data/job-driver-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
+            Cmd = [ "${rustbuild_janus}/bin/collection_job_driver" "--config-file" "/data/job-driver-config.yml" "--datastore-keys" "vWoEFA7F+ojcF+HohGLn/Q" ];
             WorkingDir = "/data";
             Volumes = { "/data" = {}; };
           };
