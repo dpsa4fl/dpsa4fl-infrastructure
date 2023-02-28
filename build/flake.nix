@@ -23,8 +23,7 @@
           src = ./janus; # the folder with the cargo.toml
           cargoLock.lockFile = ./janus/Cargo.lock;
           cargoLock.outputHashes = {
-            # "daphne-0.1.2" = "sha256-nYuTR0QjvlyWAVoSy1UmaPXZHco4KODxcNCDq4Vqcfo=";
-            "prio-0.10.0" = "sha256-6c+CZ/eHsWT8xJjfFTxW87wuffYo5FeEq17jvTZSZow=";
+            "prio-0.10.0" = "sha256-NTlMqrVBzahc4x0HZGSq4tfWT04JKrLAsXOGeUuc+mA=";
           };
           cargoBuildFlags = "-p janus_aggregator --features tokio-console,fpvec_bounded_l2";
           RUSTFLAGS = "--cfg tokio_unstable";
