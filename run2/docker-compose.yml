@@ -17,19 +17,19 @@ services:
     ports:
       - 9901:5432
 
-  # db2:
-  #   image: postgres
-  #   volumes:
-  #     - type: bind
-  #       source: ./postgres/data
-  #       target: /docker-entrypoint-initdb.d
-  #   restart: always
-  #   environment:
-  #     POSTGRES_USER: admin
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: dpsa
-  #   ports:
-  #     - 9902:5432
+  db2:
+    image: postgres
+    volumes:
+      - type: bind
+        source: ./postgres/data
+        target: /docker-entrypoint-initdb.d
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dpsa
+    ports:
+      - 9902:5432
 
   adminer:
     image: adminer
@@ -51,13 +51,29 @@ services:
   #     - 9991:9991
   #     - 6669:6669
 
+  aggregator1:
+    build:
+      context: ./janus
+      dockerfile: Dockerfile
+      args:
+        BINARY: aggregator
+        CONFIG: data/aggregator-config.yml
+    environment:
+      - RUST_LOG=info
+    volumes:
+      - type: bind
+        source: ./janus_server/data1
+        target: /data
+    ports:
+      - 9991:9991
+      - 6669:6669
+
   dpsa4fl-janus-tasks1:
     build:
       context: ./dpsa4fl-janus-tasks
       dockerfile: Dockerfile
       args:
         CONFIG: data/aggregator-config.yml
-        CONFIG2: hello
 
     volumes:
       - type: bind
@@ -67,47 +83,77 @@ services:
     ports:
       - 9981:9991
 
-  # janus_server_collect_jd1:
-  #   image: mxmurw/janus_server_collect_jd:latest
-  #   volumes:
-  #     - type: bind
-  #       source: ./janus_server/data1
-  #       target: /data
+  janus_server_collect_jd1:
+    # image: mxmurw/janus_server_collect_jd:latest
+    build:
+      context: ./janus
+      dockerfile: Dockerfile
+      args:
+        BINARY: collection_job_driver
+        CONFIG: data/job-driver-config.yml
+    volumes:
+      - type: bind
+        source: ./janus_server/data1
+        target: /data
 
-  # janus_server_aggregation_jd1:
-  #   image: mxmurw/janus_server_aggregation_jd:latest
-  #   environment:
-  #     - RUST_LOG=info
-  #   volumes:
-  #     - type: bind
-  #       source: ./janus_server/data1
-  #       target: /data
+  janus_server_aggregation_jd1:
+    # image: mxmurw/janus_server_aggregation_jd:latest
+    build:
+      context: ./janus
+      dockerfile: Dockerfile
+      args:
+        BINARY: aggregation_job_driver
+        CONFIG: data/job-driver-config.yml
+    environment:
+      - RUST_LOG=info
+    volumes:
+      - type: bind
+        source: ./janus_server/data1
+        target: /data
 
-  # janus_server_aggregation_jc1:
-  #   image: mxmurw/janus_server_aggregation_jc:latest
-  #   volumes:
-  #     - type: bind
-  #       source: ./janus_server/data1
-  #       target: /data
+  janus_server_aggregation_jc1:
+    # image: mxmurw/janus_server_aggregation_jc:latest
+    build:
+      context: ./janus
+      dockerfile: Dockerfile
+      args:
+        BINARY: aggregation_job_creator
+        CONFIG: data/job-creator-config.yml
+    volumes:
+      - type: bind
+        source: ./janus_server/data1
+        target: /data
 
   # #################################################################
   # # aggregator server 2
-  # aggregator2:
-  #   image: mxmurw/janus_server_aggregator:latest
-  #   volumes:
-  #     - type: bind
-  #       source: ./janus_server/data2
-  #       target: /data
-  #   ports:
-  #     - 9992:9992
+  aggregator2:
+    # image: mxmurw/janus_server_aggregator:latest
+    build:
+      context: ./janus
+      dockerfile: Dockerfile
+      args:
+        BINARY: aggregator
+        CONFIG: data/aggregator-config.yml
+    volumes:
+      - type: bind
+        source: ./janus_server/data2
+        target: /data
+    ports:
+      - 9992:9992
 
-  # dpsa4fl-janus-tasks2:
-  #   image: mxmurw/janus_server_dpsa4fl-janus-tasks:latest
-  #   volumes:
-  #     - type: bind
-  #       source: ./janus_server/data2
-  #       target: /data
-  #   ports:
-  #     - 9982:9992
+  dpsa4fl-janus-tasks2:
+    # image: mxmurw/janus_server_dpsa4fl-janus-tasks:latest
+    build:
+      context: ./dpsa4fl-janus-tasks
+      dockerfile: Dockerfile
+      args:
+        CONFIG: data/aggregator-config.yml
+
+    volumes:
+      - type: bind
+        source: ./janus_server/data2
+        target: /data
+    ports:
+      - 9982:9992
 
 
