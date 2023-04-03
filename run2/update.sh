@@ -4,11 +4,11 @@ set -e; set -o pipefail;
 echo 'Updating...'
 
 cd janus
-git pull origin dpsa-m4-release
+git pull
 cd ..
 
 cd dpsa4fl-janus-tasks
-git pull origin main
+git pull
 cd ..
 
 docker-compose build
