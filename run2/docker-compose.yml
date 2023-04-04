@@ -73,7 +73,7 @@ services:
       context: ./dpsa4fl-janus-tasks
       dockerfile: Dockerfile
       args:
-        CONFIG: data/aggregator-config.yml
+        CONFIG: data/tasks-config.yml
 
     volumes:
       - type: bind
@@ -147,7 +147,7 @@ services:
       context: ./dpsa4fl-janus-tasks
       dockerfile: Dockerfile
       args:
-        CONFIG: data/aggregator-config.yml
+        CONFIG: data/tasks-config.yml
 
     volumes:
       - type: bind
