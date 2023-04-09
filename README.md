@@ -2,7 +2,11 @@
 
 Infrastructure setup for running the [dpsa4fl example project](https://github.com/dpsa-project/dpsa4fl-example-project).
 
-**NOTE**: setup for running janus for milestone 5 is now in the `run2` subdirectory.
+**NOTE**: The `run2` subdirectory contains git submodules, e.g. the janus setup. to clone this repo including all sumbodules, use
+
+```
+git clone --recursive https://github.com/dpsa-project/dpsa4fl-testing-infrastructure.git
+```
 
 ## Run the server
 Run `docker-compose` in the `run2` subdirectory.
