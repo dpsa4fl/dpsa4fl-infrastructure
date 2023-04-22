@@ -5,4 +5,6 @@ database:
   url: postgres://admin:password@db1:5432/dpsa
 leader_endpoint: http://aggregator1:9991
 helper_endpoint: http://aggregator2:9992
+external_leader: http://127.0.0.1:9991
+external_helper: http://127.0.0.1:9992
 
