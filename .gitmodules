@@ -1,10 +1,3 @@
-[submodule "build/janus"]
-	path = build/janus
-	url = ../janus.git
-	branch = dpsa-m4-main
-[submodule "build/dpsa4fl-janus-tasks"]
-	path = build/dpsa4fl-janus-tasks
-	url = ../dpsa4fl-janus-tasks.git
 [submodule "run2/dpsa4fl-janus-tasks"]
 	path = run2/dpsa4fl-janus-tasks
 	url = ../dpsa4fl-janus-tasks.git
