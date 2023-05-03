@@ -1,6 +1,3 @@
-[submodule "run2/dpsa4fl-janus-tasks"]
-	path = docker-test-setup/dpsa4fl-janus-tasks
-	url = ../dpsa4fl-janus-tasks.git
 [submodule "run2/janus"]
 	path = docker-test-setup/janus
 	url = ../janus.git
