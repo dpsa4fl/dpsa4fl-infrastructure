@@ -56,6 +56,25 @@ max_upload_batch_write_delay_ms: 500
 database:
   url: postgres://admin:password@db1:5432/dpsa
 ```
-The listening port can be chosen freely, the url for the database should contain the same data as chosen when setting up the database for this server, in the format `$USER:$PASSWORD@$ADDRESS:$PORT/$DBNAME`.
+The listening port can be chosen freely. The url for the database should contain the same data as chosen when setting up the database for this server, in the format `$USER:$PASSWORD@$ADDRESS:$PORT/$DBNAME`.
+
+As another example, a sample configuration for the janus manager is as follows:
+```
+listen_address: 0.0.0.0:9981
+max_upload_batch_size: 50
+max_upload_batch_write_delay_ms: 500
+database:
+  url: postgres://admin:password@db1:5432/dpsa
+leader_endpoint: http://aggregator1:9991
+helper_endpoint: http://aggregator2:9992
+external_leader: http://127.0.0.1:9991
+external_helper: http://127.0.0.1:9992
+```
+Here the `endpoint` address contains the url as seen locally by the aggregators when communicating with each other, while the `external` address contains the url as seen by controller and client. Depending on the deployment these might be the same.
 
 Note that the sample configuration for both `aggregation_job_driver` and `collection_job_driver` is given by the same file.
+
+More details, and further examples can be found in the [janus deployment documentation](https://github.com/divviup/janus/blob/main/docs/DEPLOYING.md).
+
+
+
