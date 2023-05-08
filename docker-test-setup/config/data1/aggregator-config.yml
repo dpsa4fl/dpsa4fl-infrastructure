@@ -4,9 +4,3 @@ max_upload_batch_size: 50
 max_upload_batch_write_delay_ms: 500
 database:
   url: postgres://admin:password@db1:5432/dpsa
-# use_test_writer: true
-# force_json_output: true
-# logging_config:
-#   tokio_console_config:
-#     enabled: true
-#     listen_address: 0.0.0.0:6669
