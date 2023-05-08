@@ -45,7 +45,7 @@ services:
   #     - RUST_LOG=info
   #   volumes:
   #     - type: bind
-  #       source: ./config/data1
+  #       source: ./config/leader
   #       target: /data
   #   ports:
   #     - 9991:9991
@@ -62,7 +62,7 @@ services:
       - RUST_LOG=info
     volumes:
       - type: bind
-        source: ./config/data1
+        source: ./config/leader
         target: /data
     ports:
       - 9991:9991
@@ -77,7 +77,7 @@ services:
 
     volumes:
       - type: bind
-        source: ./config/data1
+        source: ./config/leader
         target: /data
 
     ports:
@@ -93,7 +93,7 @@ services:
         CONFIG: data/job-driver-config.yml
     volumes:
       - type: bind
-        source: ./config/data1
+        source: ./config/leader
         target: /data
 
   janus_server_aggregation_jd1:
@@ -108,7 +108,7 @@ services:
       - RUST_LOG=info
     volumes:
       - type: bind
-        source: ./config/data1
+        source: ./config/leader
         target: /data
 
   janus_server_aggregation_jc1:
@@ -121,7 +121,7 @@ services:
         CONFIG: data/job-creator-config.yml
     volumes:
       - type: bind
-        source: ./config/data1
+        source: ./config/leader
         target: /data
 
   # #################################################################
@@ -136,7 +136,7 @@ services:
         CONFIG: data/aggregator-config.yml
     volumes:
       - type: bind
-        source: ./config/data2
+        source: ./config/helper
         target: /data
     ports:
       - 9992:9992
@@ -151,7 +151,7 @@ services:
 
     volumes:
       - type: bind
-        source: ./config/data2
+        source: ./config/helper
         target: /data
     ports:
       - 9982:9992
