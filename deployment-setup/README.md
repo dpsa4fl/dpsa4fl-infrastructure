@@ -1,5 +1,5 @@
 
-# Deployment of DPSA infrastructure
+# Deployment of dpsa4fl infrastructure
 
 Here we describe the minimal setup required for running a distributed deployment with two aggregator servers.
 In a nutshell, each aggregator server is set up like a normal janus server,

@@ -1,4 +1,4 @@
-# Local docker instance for DPSA
+# Local docker instance for dpsa4fl
 
 This file describes how to setup and start a local DPSA infrastructure instance, consisting of two aggregation servers. With it, you can test differentially private, federated ML projects, such as our [example project](https://github.com/dpsa-project/dpsa4fl-example-project/) locally on your development machine.
 
