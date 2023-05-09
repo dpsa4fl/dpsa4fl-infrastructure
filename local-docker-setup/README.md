@@ -1,6 +1,6 @@
 # Local docker instance for dpsa4fl
 
-This file describes how to setup and start a local dpsa4fl infrastructure instance, consisting of two aggregation servers. With it, you can test differentially private, federated ML projects, such as our [example project](https://github.com/dpsa-project/dpsa4fl-example-project/) locally on your development machine.
+This file describes how to setup and start a local dpsa4fl infrastructure instance, consisting of two aggregation servers. With it, you can test differentially private, federated ML projects, such as our [example project](https://github.com/dpsa-project/dpsa4fl-example-project/), locally on your development machine.
 
 ## Requirements
 The only requirement is a working `docker` installation. The build process itself runs inside a container.
