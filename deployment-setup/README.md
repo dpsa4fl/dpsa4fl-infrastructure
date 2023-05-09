@@ -3,10 +3,10 @@
 
 Here we describe the minimal setup required for running a distributed deployment with two aggregator servers.
 In a nutshell, each aggregator server is set up like a normal janus server,
-with an additional server process which handles DPSA-specific functionality, such as keeping track of training
+with an additional server process which handles dpsa4fl-specific functionality, such as keeping track of training
 sessions.
 
-If you only want to run DPSA locally for testing purposes, see [here](../local-docker-setup) for a docker-compose based solution.
+If you only want to run dpsa4fl infrastructure locally for testing purposes, see [here](../local-docker-setup) for a docker-compose based solution.
 
 ## Detailed setup
 One of the aggregator servers takes on the role of the "leader", and the other is the "helper". In our setup this distribution of roles is fixed and has to be decided beforehand. The leader is responsible for most communications with controller and clients, but the privacy-relevant parts of the distributed aggregation algorithm are split symmetrically between both leader and helper.
