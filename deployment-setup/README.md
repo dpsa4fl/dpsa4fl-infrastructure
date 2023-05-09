@@ -6,7 +6,7 @@ In a nutshell, each aggregator server is set up like a normal janus server,
 with an additional server process which handles DPSA-specific functionality, such as keeping track of training
 sessions.
 
-If you only want to run DPSA locally for testing purposes, see [here](../docker-test-setup) for a docker-compose based solution.
+If you only want to run DPSA locally for testing purposes, see [here](../local-docker-setup) for a docker-compose based solution.
 
 ## Detailed setup
 One of the aggregator servers takes on the role of the "leader", and the other is the "helper". In our setup this distribution of roles is fixed and has to be decided beforehand. The leader is responsible for most communications with controller and clients, but the privacy-relevant parts of the distributed aggregation algorithm are split symmetrically between both leader and helper.
@@ -43,10 +43,10 @@ $BINARY --config-file $CONFIG --datastore-keys $KEY
 where `$CONFIG` is the path to the configuration for that executable (each executable has a different configuration file format), and `$KEY` is the datastore key, which should be the same for all binaries running on the same server.
 
 ## Database
-Each server requires a postgres database. Initialize it with the schema found [here](../docker-test-setup/config/postgres/schema.sql).
+Each server requires a postgres database. Initialize it with the schema found [here](../local-docker-setup/config/postgres/schema.sql).
 
 ## Configuration
-A set of valid minimal configuration files can be found in the [local setup example](../docker-test-setup/config).
+A set of valid minimal configuration files can be found in the [local setup example](../local-docker-setup/config).
 
 For example, the configuration for the aggregator is as follows:
 ```

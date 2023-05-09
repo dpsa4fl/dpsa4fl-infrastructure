@@ -4,7 +4,7 @@ This repository provides the infrastructure setup required for using [dpsa4fl](h
 
 ## local docker instance
 
-See the README in the [`docker-test-setup`](./docker-test-setup) subfolder.
+See the README in the [`local-docker-setup`](./local-docker-setup) subfolder.
 
 ## distributed instance for deployment
 
