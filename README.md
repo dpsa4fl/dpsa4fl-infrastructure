@@ -1,4 +1,17 @@
-# dpsa4fl testing infrastructure (custom janus server instance)
+# dpsa4fl infrastructure
+
+This repository provides the infrastructure setup required for using [dpsa4fl](../dpsa4fl). For an overview over the project see [here](../overview).
+
+## local docker instance
+
+See the README in the [`docker-test-setup`](./docker-test-setup) subfolder.
+
+## distributed instance for deployment
+
+See the README in the [`deployment-setup`](./deployment-setup) subfolder.
+
+## Other
+
 
 Infrastructure setup for running the [dpsa4fl example project](https://github.com/dpsa-project/dpsa4fl-example-project).
 
