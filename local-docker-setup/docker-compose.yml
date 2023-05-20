@@ -5,10 +5,10 @@ version: '3.1'
 services:
   db1:
     image: postgres
-    volumes:
-      - type: bind
-        source: ./config/postgres
-        target: /docker-entrypoint-initdb.d
+    # volumes:
+    #   - type: bind
+    #     source: ./janus/db
+    #     target: /docker-entrypoint-initdb.d
     restart: always
     environment:
       POSTGRES_USER: admin
@@ -17,12 +17,26 @@ services:
     ports:
       - 9901:5432
 
-  db2:
-    image: postgres
+  db1-init:
+    build:
+      context: ./config/postgres-init
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: postgres://admin:password@db1:5432/dpsa
     volumes:
       - type: bind
-        source: ./config/postgres
-        target: /docker-entrypoint-initdb.d
+        source: ./janus/db
+        target: /sqlx-initdb.d
+    depends_on:
+      - db1
+    restart: "no"
+
+  db2:
+    image: postgres
+    # volumes:
+    #   - type: bind
+    #     source: ./config/postgres
+    #     target: /docker-entrypoint-initdb.d
     restart: always
     environment:
       POSTGRES_USER: admin
@@ -30,6 +44,20 @@ services:
       POSTGRES_DB: dpsa
     ports:
       - 9902:5432
+
+  db2-init:
+    build:
+      context: ./config/postgres-init
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: postgres://admin:password@db2:5432/dpsa
+    volumes:
+      - type: bind
+        source: ./janus/db
+        target: /sqlx-initdb.d
+    depends_on:
+      - db2
+    restart: "no"
 
   adminer:
     image: adminer
@@ -67,6 +95,9 @@ services:
     ports:
       - 9991:9991
       - 6669:6669
+    depends_on:
+      db1-init:
+        condition: service_completed_successfully
 
   dpsa4fl-janus-manager1:
     build:
@@ -74,14 +105,15 @@ services:
       dockerfile: Dockerfile
       args:
         CONFIG: data/dpsa4fl-janus-manager-config.yml
-
     volumes:
       - type: bind
         source: ./config/leader
         target: /data
-
     ports:
       - 9981:9991
+    depends_on:
+      db1-init:
+        condition: service_completed_successfully
 
   janus_server_collect_jd1:
     # image: mxmurw/janus_server_collect_jd:latest
@@ -95,6 +127,9 @@ services:
       - type: bind
         source: ./config/leader
         target: /data
+    depends_on:
+      db1-init:
+        condition: service_completed_successfully
 
   janus_server_aggregation_jd1:
     # image: mxmurw/janus_server_aggregation_jd:latest
@@ -110,6 +145,9 @@ services:
       - type: bind
         source: ./config/leader
         target: /data
+    depends_on:
+      db1-init:
+        condition: service_completed_successfully
 
   janus_server_aggregation_jc1:
     # image: mxmurw/janus_server_aggregation_jc:latest
@@ -123,6 +161,9 @@ services:
       - type: bind
         source: ./config/leader
         target: /data
+    depends_on:
+      db1-init:
+        condition: service_completed_successfully
 
   # #################################################################
   # # aggregator server 2
@@ -140,6 +181,9 @@ services:
         target: /data
     ports:
       - 9992:9992
+    depends_on:
+      db2-init:
+        condition: service_completed_successfully
 
   janus-manager2:
     # image: mxmurw/janus_server_janus-manager:latest
@@ -155,5 +199,8 @@ services:
         target: /data
     ports:
       - 9982:9992
+    depends_on:
+      db2-init:
+        condition: service_completed_successfully
 
 
