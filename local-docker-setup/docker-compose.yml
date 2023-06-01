@@ -5,10 +5,6 @@ version: '3.1'
 services:
   db1:
     image: postgres
-    # volumes:
-    #   - type: bind
-    #     source: ./janus/db
-    #     target: /docker-entrypoint-initdb.d
     restart: always
     environment:
       POSTGRES_USER: admin
@@ -33,10 +29,6 @@ services:
 
   db2:
     image: postgres
-    # volumes:
-    #   - type: bind
-    #     source: ./config/postgres
-    #     target: /docker-entrypoint-initdb.d
     restart: always
     environment:
       POSTGRES_USER: admin
@@ -67,17 +59,6 @@ services:
 
   # #################################################################
   # # aggregator server 1 (leader)
-  # aggregator1:
-  #   image: mxmurw/janus_server_aggregator:latest
-  #   environment:
-  #     - RUST_LOG=info
-  #   volumes:
-  #     - type: bind
-  #       source: ./config/leader
-  #       target: /data
-  #   ports:
-  #     - 9991:9991
-  #     - 6669:6669
 
   aggregator1:
     build:
@@ -85,7 +66,7 @@ services:
       dockerfile: Dockerfile
       args:
         BINARY: aggregator
-        CONFIG: data/aggregator-config.yml
+        FEATURES: fpvec_bounded_l2
     environment:
       - RUST_LOG=info
     volumes:
@@ -98,13 +79,12 @@ services:
     depends_on:
       db1-init:
         condition: service_completed_successfully
+    command: --config-file data/aggregator-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   dpsa4fl-janus-manager1:
     build:
       context: ./dpsa4fl
       dockerfile: Dockerfile
-      args:
-        CONFIG: data/dpsa4fl-janus-manager-config.yml
     volumes:
       - type: bind
         source: ./config/leader
@@ -114,15 +94,15 @@ services:
     depends_on:
       db1-init:
         condition: service_completed_successfully
+    command: --config-file data/dpsa4fl-janus-manager-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   janus_server_collect_jd1:
-    # image: mxmurw/janus_server_collect_jd:latest
     build:
       context: ./janus
       dockerfile: Dockerfile
       args:
         BINARY: collection_job_driver
-        CONFIG: data/job-driver-config.yml
+        FEATURES: fpvec_bounded_l2
     volumes:
       - type: bind
         source: ./config/leader
@@ -130,15 +110,15 @@ services:
     depends_on:
       db1-init:
         condition: service_completed_successfully
+    command: --config-file data/job-driver-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   janus_server_aggregation_jd1:
-    # image: mxmurw/janus_server_aggregation_jd:latest
     build:
       context: ./janus
       dockerfile: Dockerfile
       args:
         BINARY: aggregation_job_driver
-        CONFIG: data/job-driver-config.yml
+        FEATURES: fpvec_bounded_l2
     environment:
       - RUST_LOG=info
     volumes:
@@ -148,15 +128,15 @@ services:
     depends_on:
       db1-init:
         condition: service_completed_successfully
+    command: --config-file data/job-driver-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   janus_server_aggregation_jc1:
-    # image: mxmurw/janus_server_aggregation_jc:latest
     build:
       context: ./janus
       dockerfile: Dockerfile
       args:
         BINARY: aggregation_job_creator
-        CONFIG: data/job-creator-config.yml
+        FEATURES: fpvec_bounded_l2
     volumes:
       - type: bind
         source: ./config/leader
@@ -164,17 +144,17 @@ services:
     depends_on:
       db1-init:
         condition: service_completed_successfully
+    command: --config-file data/job-creator-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   # #################################################################
   # # aggregator server 2
   aggregator2:
-    # image: mxmurw/janus_server_aggregator:latest
     build:
       context: ./janus
       dockerfile: Dockerfile
       args:
         BINARY: aggregator
-        CONFIG: data/aggregator-config.yml
+        FEATURES: fpvec_bounded_l2
     volumes:
       - type: bind
         source: ./config/helper
@@ -184,14 +164,12 @@ services:
     depends_on:
       db2-init:
         condition: service_completed_successfully
+    command: --config-file data/aggregator-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   janus-manager2:
-    # image: mxmurw/janus_server_janus-manager:latest
     build:
       context: ./dpsa4fl
       dockerfile: Dockerfile
-      args:
-        CONFIG: data/dpsa4fl-janus-manager-config.yml
 
     volumes:
       - type: bind
@@ -202,5 +180,6 @@ services:
     depends_on:
       db2-init:
         condition: service_completed_successfully
+    command: --config-file data/dpsa4fl-janus-manager-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
 
