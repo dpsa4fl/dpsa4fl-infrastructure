@@ -61,12 +61,13 @@ services:
   # # aggregator server 1 (leader)
 
   aggregator1:
-    build:
-      context: ./janus
-      dockerfile: Dockerfile
-      args:
-        BINARY: aggregator
-        FEATURES: fpvec_bounded_l2
+    # build:
+    #   context: ./janus
+    #   dockerfile: Dockerfile
+    #   args:
+    #     BINARY: aggregator
+    #     FEATURES: fpvec_bounded_l2
+    image: janus_aggregator
     environment:
       - RUST_LOG=info
     volumes:
@@ -82,9 +83,10 @@ services:
     command: --config-file data/aggregator-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   dpsa4fl-janus-manager1:
-    build:
-      context: ./dpsa4fl
-      dockerfile: Dockerfile
+    image: janus_manager
+    # build:
+    #   context: ./dpsa4fl
+    #   dockerfile: Dockerfile
     volumes:
       - type: bind
         source: ./config/leader
@@ -97,12 +99,13 @@ services:
     command: --config-file data/dpsa4fl-janus-manager-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   janus_server_collect_jd1:
-    build:
-      context: ./janus
-      dockerfile: Dockerfile
-      args:
-        BINARY: collection_job_driver
-        FEATURES: fpvec_bounded_l2
+    image: janus_collection_job_driver
+    # build:
+    #   context: ./janus
+    #   dockerfile: Dockerfile
+    #   args:
+    #     BINARY: collection_job_driver
+    #     FEATURES: fpvec_bounded_l2
     volumes:
       - type: bind
         source: ./config/leader
@@ -113,12 +116,13 @@ services:
     command: --config-file data/job-driver-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   janus_server_aggregation_jd1:
-    build:
-      context: ./janus
-      dockerfile: Dockerfile
-      args:
-        BINARY: aggregation_job_driver
-        FEATURES: fpvec_bounded_l2
+    image: janus_aggregation_job_driver
+    # build:
+    #   context: ./janus
+    #   dockerfile: Dockerfile
+    #   args:
+    #     BINARY: aggregation_job_driver
+    #     FEATURES: fpvec_bounded_l2
     environment:
       - RUST_LOG=info
     volumes:
@@ -131,12 +135,13 @@ services:
     command: --config-file data/job-driver-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   janus_server_aggregation_jc1:
-    build:
-      context: ./janus
-      dockerfile: Dockerfile
-      args:
-        BINARY: aggregation_job_creator
-        FEATURES: fpvec_bounded_l2
+    image: janus_aggregation_job_creator
+    # build:
+    #   context: ./janus
+    #   dockerfile: Dockerfile
+    #   args:
+    #     BINARY: aggregation_job_creator
+    #     FEATURES: fpvec_bounded_l2
     volumes:
       - type: bind
         source: ./config/leader
@@ -149,12 +154,13 @@ services:
   # #################################################################
   # # aggregator server 2
   aggregator2:
-    build:
-      context: ./janus
-      dockerfile: Dockerfile
-      args:
-        BINARY: aggregator
-        FEATURES: fpvec_bounded_l2
+    image: janus_aggregator
+    # build:
+    #   context: ./janus
+    #   dockerfile: Dockerfile
+    #   args:
+    #     BINARY: aggregator
+    #     FEATURES: fpvec_bounded_l2
     volumes:
       - type: bind
         source: ./config/helper
@@ -167,9 +173,10 @@ services:
     command: --config-file data/aggregator-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
 
   janus-manager2:
-    build:
-      context: ./dpsa4fl
-      dockerfile: Dockerfile
+    image: janus_manager
+    # build:
+    #   context: ./dpsa4fl
+    #   dockerfile: Dockerfile
 
     volumes:
       - type: bind
