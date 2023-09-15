@@ -1,4 +1,4 @@
-FROM rust:1.68.2-alpine
+FROM rust:1.70-alpine
 ARG DATABASE_URL
 
 # WORKDIR /usr/src/myapp
