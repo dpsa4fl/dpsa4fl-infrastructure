@@ -1,0 +1,26 @@
+from rust:1.72-alpine AS builder
+RUN apk add --no-cache libc-dev
+ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+WORKDIR /usr/src/myapp
+RUN mkdir -p /usr/src/myapp/binaries
+
+COPY . .
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,sharing=private,target=/usr/src/myapp/target \
+    # sudo chown -R rust: target /home/rust/.cargo && \
+    cargo build --release -p janus_aggregator --bin aggregator --bin collection_job_driver --bin aggregation_job_driver --bin aggregation_job_creator --features=prometheus,otlp,fpvec_bounded_l2 && \
+    # Copy executable out of the cache so it is available in the final image.
+    cp target/release/aggregator ./binaries/aggregator && \
+    cp target/release/collection_job_driver ./binaries/collection_job_driver && \
+    cp target/release/aggregation_job_driver ./binaries/aggregation_job_driver && \
+    cp target/release/aggregation_job_creator ./binaries/aggregation_job_creator
+LABEL buildrole janus_builder
+
+FROM alpine:3.18.3 AS final
+ARG BINARY=aggregator
+ENV BINARY=$BINARY
+COPY --from=builder /usr/src/myapp/binaries/$BINARY /$BINARY
+RUN ls -la
+# USER 1000
+ENTRYPOINT ["/bin/sh", "-c", "exec /$BINARY \"$0\" \"$@\""]
