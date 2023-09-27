@@ -1,2 +1,5 @@
-COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build
+#!/bin/sh
+
+./janus-build-files/build-janus.sh
+./dpsa4fl/build.sh
 

@@ -7,9 +7,7 @@ cd janus
 git pull
 cd ..
 
-cd dpsa4fl-janus-tasks
+cd dpsa4fl
 git pull
 cd ..
-
-docker-compose build
 
