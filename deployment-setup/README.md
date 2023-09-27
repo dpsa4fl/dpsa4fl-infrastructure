@@ -22,7 +22,7 @@ Additionally, a postgres database is required for both servers:
  1. **postgres database**: Used for storing client reports and intermediate computation results. Has to run on both leader and helper.
 
 ## Building
-Executables (1.) through (4.) are built from our [janus fork](https://github.com/dpsa-project/janus/tree/dpsa-m6-dev). After cloning, you can use the following command:
+Executables (1.) through (4.) are built from [janus](https://github.com/divviup/janus). After cloning, you can use the following command:
 ```
 cargo build --release -p janus_aggregator --bin $BINARY
 ```
@@ -43,7 +43,7 @@ $BINARY --config-file $CONFIG --datastore-keys $KEY
 where `$CONFIG` is the path to the configuration for that executable (each executable has a different configuration file format), and `$KEY` is the datastore key, which should be the same for all binaries running on the same server.
 
 ## Database
-Each server requires a postgres database. Initialize it with the schema found [here](../local-docker-setup/config/postgres/schema.sql).
+Each server requires a postgres database. Initialize it with the schema found [here](https://github.com/divviup/janus/tree/main/db).
 
 ## Configuration
 A set of valid minimal configuration files can be found in the [local setup example](../local-docker-setup/config).
