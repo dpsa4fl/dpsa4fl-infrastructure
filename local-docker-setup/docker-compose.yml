@@ -80,7 +80,7 @@ services:
     depends_on:
       db1-init:
         condition: service_completed_successfully
-    command: --config-file data/aggregator-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
+    command: --config-file data/aggregator-config.yml --datastore-keys Qoj3fugWbEGvQNEWr1Waqw
 
   dpsa4fl-janus-manager1:
     image: janus_manager
@@ -96,7 +96,7 @@ services:
     depends_on:
       db1-init:
         condition: service_completed_successfully
-    command: --config-file data/dpsa4fl-janus-manager-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
+    command: --config-file data/dpsa4fl-janus-manager-config.yml --datastore-keys Qoj3fugWbEGvQNEWr1Waqw
 
   janus_server_collect_jd1:
     image: janus_collection_job_driver
@@ -113,7 +113,7 @@ services:
     depends_on:
       db1-init:
         condition: service_completed_successfully
-    command: --config-file data/job-driver-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
+    command: --config-file data/job-driver-config.yml --datastore-keys Qoj3fugWbEGvQNEWr1Waqw
 
   janus_server_aggregation_jd1:
     image: janus_aggregation_job_driver
@@ -132,7 +132,7 @@ services:
     depends_on:
       db1-init:
         condition: service_completed_successfully
-    command: --config-file data/job-driver-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
+    command: --config-file data/job-driver-config.yml --datastore-keys Qoj3fugWbEGvQNEWr1Waqw
 
   janus_server_aggregation_jc1:
     image: janus_aggregation_job_creator
@@ -149,7 +149,7 @@ services:
     depends_on:
       db1-init:
         condition: service_completed_successfully
-    command: --config-file data/job-creator-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
+    command: --config-file data/job-creator-config.yml --datastore-keys Qoj3fugWbEGvQNEWr1Waqw
 
   # #################################################################
   # # aggregator server 2
@@ -170,7 +170,7 @@ services:
     depends_on:
       db2-init:
         condition: service_completed_successfully
-    command: --config-file data/aggregator-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
+    command: --config-file data/aggregator-config.yml --datastore-keys Qoj3fugWbEGvQNEWr1Waqw
 
   janus-manager2:
     image: janus_manager
@@ -187,6 +187,6 @@ services:
     depends_on:
       db2-init:
         condition: service_completed_successfully
-    command: --config-file data/dpsa4fl-janus-manager-config.yml --datastore-keys vWoEFA7F+ojcF+HohGLn/Q
+    command: --config-file data/dpsa4fl-janus-manager-config.yml --datastore-keys Qoj3fugWbEGvQNEWr1Waqw
 
 
